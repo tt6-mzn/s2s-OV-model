@@ -25,7 +25,7 @@ class us2s_OV:
         ret: int = self.x[n][(k + 1) % self.K] - self.x[n][k]
         if ret >= 0:
             return ret 
-        return self.L - ret 
+        return self.L + ret 
     
     def _next(self) -> None:
         self.x.append([-1 for _ in range(self.K)])
@@ -38,12 +38,12 @@ class us2s_OV:
         self.n += 1
     
     def simulate(self, nmax: int) -> None:
-        while self.n <= nmax:
+        while self.n < nmax:
             self._next()
     
     def __repr__(self) -> str:
         return "\n".join(["{:4d}: ".format(i) + "".join("X" if j in self.x[i] else "-" for j in range(self.L))
-                            for i in range(self.n)])
+                            for i in range(self.n + 1)])
 
 
 def main():
@@ -57,6 +57,8 @@ def main():
         dt    = 1,  # 時間差分
         x     = [i for i in range(30)]  # 車両の初期位置
     )
+
+    print(model._delta_x(29, 0))
 
     model.simulate(100)
 
