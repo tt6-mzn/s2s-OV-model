@@ -44,6 +44,20 @@ class us2s_OV:
     def __repr__(self) -> str:
         return "\n".join(["{:4d}: ".format(i) + "".join("X" if j in self.x[i] else "-" for j in range(self.L))
                             for i in range(self.n + 1)])
+    
+    def flow(self, n_1: int, n_2: int):
+        ret = 0.0
+        for k in range(self.K):
+            for n in range(n_1, n_2 + 1):
+                tmp = (self.x[n + 1][k] - self.x[n][k])
+                if (tmp < 0): tmp = self.L + tmp
+                tmp /= self.dt
+                tmp /= (n_2 - n_1 + 1) * self.L
+                ret += tmp
+        return ret
+
+    def density(self):
+        return self.K / self.L
 
 
 def main():
@@ -63,6 +77,7 @@ def main():
     model.simulate(100)
 
     print(model)
+    print(model.flow(25, 50))
 
 if __name__ == "__main__":
     main()
