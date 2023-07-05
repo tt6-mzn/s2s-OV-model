@@ -5,23 +5,24 @@ import us2s_OV
 
 def main():
 	L     = 100  # レーンの長さ
-	n_0   = 3  # monitoring period
-	x_0   = 1  # 最短車間距離
-	v_0   = 4  # 車両の最高速度
-	dt    = 1  # 時間差分
+	n_0   = 3    # monitoring period
+	x_0   = 1    # 最短車間距離
+	v_0   = 4    # 車両の最高速度
+	dt    = 1    # 時間差分
+	nmax  = 1001 # シミュレーションするステップ数
 
 	density = []
 	flow = []
  
 	# 密度を変えて、複数の初期条件からflowを計算
 	for K in range(0, 101):
-		sys.stdout.write("\r({}/{})".format(K, 100))
-		sys.stdout.flush()
-		for _ in range(1): # 各密度について100回ずつ計算
+		for _ in range(100): # 各密度について100回ずつ計算
+			sys.stdout.write("\rK = {}, ({}/{})".format(K, _, 100))
+			sys.stdout.flush()
 			# 車両の初期位置をランダムに生成
 			x_init = sorted(random.sample([i for i in range(L)], K))
-			model = us2s_OV.us2s_OV(L, K, n_0, x_0, v_0, dt, x_init)
-			model.simulate(1100)
+			model = us2s_OV.us2s_OV(L, K, n_0, x_0, v_0, dt, x_init, nmax)
+			model.simulate()
 			density.append(model.density())
 			flow.append(model.flow(800, 1000))
 	
