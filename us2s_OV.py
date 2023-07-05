@@ -29,10 +29,11 @@ class us2s_OV:
     def _next(self) -> None:
         self.x.append([-1 for _ in range(self.K)])
         for k in range(self.K):
+            delta_eff: int = min([self._delta_x(k, self.n - n_) for n_ in range(0, self.n_0 + 1)]) - self.x_0
             self.x[self.n + 1][k] = (
                 self.x[self.n][k]
-                + max(0, min([self._delta_x(k, self.n - n_) for n_ in range(0, self.n_0 + 1)]) - self.x_0)
-                - max(0, min([self._delta_x(k, self.n - n_) for n_ in range(0, self.n_0 + 1)]) - self.x_0 - self.v_0 * self.dt)
+                + max(0, delta_eff)
+                - max(0, delta_eff - self.v_0 * self.dt)
             ) % self.L
         self.n += 1
     

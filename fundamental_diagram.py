@@ -17,7 +17,7 @@ def main():
 	for K in range(0, 101):
 		sys.stdout.write("\r({}/{})".format(K, 100))
 		sys.stdout.flush()
-		for _ in range(1000): # 各密度について100回ずつ計算
+		for _ in range(1): # 各密度について100回ずつ計算
 			# 車両の初期位置をランダムに生成
 			x_init = sorted(random.sample([i for i in range(L)], K))
 			model = us2s_OV.us2s_OV(L, K, n_0, x_0, v_0, dt, x_init)
@@ -36,7 +36,9 @@ def main():
 		s=2,
 		marker='o',
 	)
-	plt.savefig("out.png")
+	plt.xlim(0.0, 1.0)
+	plt.ylim(0.0, 1.0)
+	plt.savefig("./img/test.png")
 
 if __name__ == "__main__":
     main()
