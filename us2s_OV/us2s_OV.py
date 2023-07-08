@@ -28,7 +28,7 @@ class us2s_OV:
         self.x   = np.full(
             shape=(N_MAX + 1, K_MAX),
             fill_value=-1,
-            dtype=np.int32
+            dtype=np.int64
         )  # 各時刻における車両の位置
 
         # 車両の初期位置
@@ -63,20 +63,10 @@ class us2s_OV:
     
     # n_1ステップからn_2ステップまでの流量を計算
     def flow(self, n_1: int, n_2: int):
-        tmp = (self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K] + L) % L
-        tmp = tmp.astype(dtype=np.float64)
+        tmp = np.sum((self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K] + L) % L)
         tmp /= dt
         tmp /= (n_2 - n_1 + 1) * L
-        return np.sum(tmp)
-        # ret = 0.0
-        # for k in range(self.K):
-        #     for n in range(n_1, n_2 + 1):
-        #         tmp = (self.x[n + 1][k] - self.x[n][k])
-        #         if (tmp < 0): tmp = L + tmp
-        #         tmp /= dt
-        #         tmp /= (n_2 - n_1 + 1) * L
-        #         ret += tmp
-        # return ret
+        return tmp
 
     def density(self):
         return self.K / L
@@ -96,7 +86,7 @@ def main():
     model.simulate()
 
     print(model)
-    print(model.flow(0, 999))
+    print("{:.10}".format(model.flow(0, 1000)))
 
 if __name__ == "__main__":
     main()
