@@ -72,7 +72,7 @@ class us2s_OV:
         return self.K / L
 
 
-def main():
+if __name__ == "__main__":
     # us2s_OVモデルのインスタンス化
     model = us2s_OV(
         K      = 30,                      # 車両の数
@@ -87,6 +87,3 @@ def main():
 
     print(model)
     print("{:.10}".format(model.flow(0, 1000)))
-
-if __name__ == "__main__":
-    main()
