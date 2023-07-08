@@ -5,12 +5,12 @@ import us2s_OV
 import numpy as np
 
 def main():
-	n_0   = 3    # monitoring period
-	x_0   = 1    # 最短車間距離
-	v_0   = 4    # 車両の最高速度
+	n_0 = 3    # monitoring period
+	x_0 = 1    # 最短車間距離
+	v_0 = 4    # 車両の最高速度
 
 	density = np.zeros(shape=(101 * 100))
-	flow = np.zeros(shape=(101 * 100))
+	flow    = np.zeros(shape=(101 * 100))
  
 	# 密度を変えて、複数の初期条件からflowを計算
 	id = 0  # 各シミュレーションに割り振る番号
