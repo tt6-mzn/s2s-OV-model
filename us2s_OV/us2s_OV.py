@@ -30,30 +30,35 @@ class us2s_OV:
             fill_value=-1,
             dtype=np.int64
         )  # 各時刻における車両の位置
-
         # 車両の初期位置
+        if self.K == 0: return  # 車両が0台のとき
         self.x[:n_0+1, :self.K] = np.array(x_init)[None, :]
-    
-	# 時刻nにおける車両kと車両k+1の車間距離を計算する関数
-    def _delta_x(self, k: int, n: int) -> int:
-        ret: int = self.x[n, (k + 1) % self.K] - self.x[n, k]
-        if ret >= 0:
-            return ret 
-        return L + ret 
+        self.delta_x = np.full(
+            shape=(N_MAX + 1, K_MAX),
+            fill_value=-1,
+            dtype=np.int64
+        )
+        # 前方の車両との車間距離
+        self.delta_x[:n_0+1,  self.K-1] = (self.x[:n_0+1, 0       ] - self.x[:n_0+1,  self.K-1] + L) % L
+        self.delta_x[:n_0+1, :self.K-1] = (self.x[:n_0+1, 1:self.K] - self.x[:n_0+1, :self.K-1] + L) % L
     
     # ステップを一つ進める
     def _next(self) -> None:
-        for k in range(self.K):
-            delta_eff: int = min([self._delta_x(k, self.n - n_) for n_ in range(0, self.n_0 + 1)]) - self.x_0
-            self.x[self.n + 1, k] = (
-                self.x[self.n, k]
-                + max(0, delta_eff)
-                - max(0, delta_eff - self.v_0 * dt)
-            ) % L
+        # 各車両における\delta_eff x_kをを計算する
+        delta_eff = np.min(self.delta_x[self.n-self.n_0 : self.n+1], axis=0) - self.x_0
+        self.x[self.n + 1] = (
+            self.x[self.n]
+            + np.where(delta_eff < 0, 0, delta_eff)
+            - np.where(delta_eff - self.v_0 < 0, 0, delta_eff - self.v_0 * dt)
+        ) % L
+        # 車間距離の更新
+        self.delta_x[self.n+1,  self.K-1] = (self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1] + L) % L
+        self.delta_x[self.n+1, :self.K-1] = (self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1] + L) % L
         self.n += 1
     
     # nmaxまでシミュレーションを行う
     def simulate(self) -> None:
+        if self.K == 0: return
         while self.n < N_MAX:
             self._next()
     
@@ -62,7 +67,8 @@ class us2s_OV:
                             for i in range(self.n + 1)])
     
     # n_1ステップからn_2ステップまでの流量を計算
-    def flow(self, n_1: int, n_2: int):
+    def flow(self, n_1: int, n_2: int) -> float:
+        if self.K == 0: return 0.0
         tmp = np.sum((self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K] + L) % L)
         tmp /= dt
         tmp /= (n_2 - n_1 + 1) * L
