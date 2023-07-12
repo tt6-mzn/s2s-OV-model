@@ -48,8 +48,9 @@ class us2s_OV:
         delta_eff = np.min(self.delta_x[self.n-self.n_0 : self.n+1], axis=0) - self.x_0
         self.x[self.n + 1] = (
             self.x[self.n]
-            + np.where(delta_eff < 0, 0, delta_eff)
-            - np.where(delta_eff - self.v_0 < 0, 0, delta_eff - self.v_0 * dt)
+            + np.where(delta_eff < self.v_0 * dt, delta_eff, self.v_0 * dt)
+            # + np.where(delta_eff < 0, 0, delta_eff)
+            # - np.where(delta_eff - self.v_0 < 0, 0, delta_eff - self.v_0 * dt)
         ) % L
         # 車間距離の更新
         self.delta_x[self.n+1,  self.K-1] = (self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1] + L) % L

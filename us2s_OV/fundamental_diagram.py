@@ -4,7 +4,7 @@ import random
 import us2s_OV
 import numpy as np
 
-M = 1000  # 各密度についてシミュレーションする回数
+M = 1  # 各密度についてシミュレーションする回数
 
 def main():
 	n_0 = 3    # monitoring period
