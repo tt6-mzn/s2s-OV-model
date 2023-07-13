@@ -1,3 +1,4 @@
+import random
 from typing import List
 import numpy as np
 
@@ -19,7 +20,7 @@ class us2s_OV_CA:
         K     : int,        # 車両の台数
         n_0   : int,        # monitoring period
         v_0   : int,        # 車両の最高速度
-        x_init: List[int],  # 車両の初期位置
+        x_init: List[int],  # 車両の初期位置(!! ソート済みであること必須 !!)
         n_max : int,
         x_0   : int = 1,
         dt    : int = 1
@@ -55,10 +56,12 @@ class us2s_OV_CA:
     # ステップを一つ進める
     def _next(self) -> None:
         # 各車両における\delta_eff x_kをを計算する
-        delta_eff = np.min(self.delta_x[self.n-self.n_0 : self.n+1], axis=0) - self.x_0
-        self.x[self.n + 1] = (
-            self.x[self.n]
-            + np.where(delta_eff < self.v_0 * self.dt, delta_eff, self.v_0 * self.dt)
+        delta_eff = np.min(self.delta_x[self.n-self.n_0:self.n+1, :self.K], axis=0) - self.x_0
+        self.x[self.n + 1, :self.K] = (
+            self.x[self.n, :self.K]
+            + np.where(delta_eff <= self.v_0 * self.dt, delta_eff, self.v_0 * self.dt)
+            # + np.where(delta_eff < 0, 0, delta_eff)
+            # - np.where(delta_eff - self.v_0 < 0, 0, delta_eff - self.v_0 * self.dt)
         ) % self.L
         # 車間距離の更新
         self.delta_x[self.n+1,  self.K-1] = (self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1] + self.L) % self.L
@@ -94,12 +97,12 @@ if __name__ == "__main__":
         K      = 30,                      # 車両の数
         n_0    = 2,                       # monitoring period
         v_0=2,
-        x_init = [i for i in range(30)],  # 車両の初期位置
-        n_max=1001,
+        x_init = sorted(random.sample([i for i in range(100)], 30)),  # 車両の初期位置
+        n_max=100,
     )
 
 	# シミュレーション
     model.simulate()
 
     print(model)
-    print("{:.10}".format(model.flow(0, 1000)))
+    print("{:.10}".format(model.flow(0, 99)))
