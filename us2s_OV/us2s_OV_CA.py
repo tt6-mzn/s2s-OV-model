@@ -50,8 +50,11 @@ class us2s_OV_CA:
             dtype=np.int64
         )
         # 前方の車両との車間距離
-        self.delta_x[:self.n_0+1,  self.K-1] = (self.x[:self.n_0+1, 0       ] - self.x[:self.n_0+1,  self.K-1] + self.L) % self.L
-        self.delta_x[:self.n_0+1, :self.K-1] = (self.x[:self.n_0+1, 1:self.K] - self.x[:self.n_0+1, :self.K-1] + self.L) % self.L
+        if self.K == 1:
+            self.delta_x[:self.n_0+1, 0] = self.L
+        else:
+            self.delta_x[:self.n_0+1,  self.K-1] = (self.x[:self.n_0+1, 0       ] - self.x[:self.n_0+1,  self.K-1] + self.L) % self.L
+            self.delta_x[:self.n_0+1, :self.K-1] = (self.x[:self.n_0+1, 1:self.K] - self.x[:self.n_0+1, :self.K-1] + self.L) % self.L
     
     # ステップを一つ進める
     def _next(self) -> None:
@@ -64,8 +67,11 @@ class us2s_OV_CA:
             # - np.where(delta_eff - self.v_0 < 0, 0, delta_eff - self.v_0 * self.dt)
         ) % self.L
         # 車間距離の更新
-        self.delta_x[self.n+1,  self.K-1] = (self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1] + self.L) % self.L
-        self.delta_x[self.n+1, :self.K-1] = (self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1] + self.L) % self.L
+        if self.K == 1:
+            self.delta_x[self.n+1, 0] = self.L
+        else:
+            self.delta_x[self.n+1,  self.K-1] = (self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1] + self.L) % self.L
+            self.delta_x[self.n+1, :self.K-1] = (self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1] + self.L) % self.L
         self.n += 1
     
     # nmaxまでシミュレーションを行う
@@ -94,10 +100,10 @@ if __name__ == "__main__":
     # us2s_OVモデルのインスタンス化
     model = us2s_OV_CA(
         L=100,
-        K      = 30,                      # 車両の数
+        K      = 1,                      # 車両の数
         n_0    = 2,                       # monitoring period
         v_0=2,
-        x_init = sorted(random.sample([i for i in range(100)], 30)),  # 車両の初期位置
+        x_init = sorted(random.sample([i for i in range(100)], 1)),  # 車両の初期位置
         n_max=100,
     )
 
