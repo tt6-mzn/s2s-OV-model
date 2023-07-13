@@ -1,28 +1,29 @@
 import sys
 import matplotlib.pyplot as plt
 import random
-import us2s_OV
+import us2s_OV_CA
 import numpy as np
 
 M = 1  # 各密度についてシミュレーションする回数
 
 def main():
-	n_0 = 3    # monitoring period
-	x_0 = 1    # 最短車間距離
-	v_0 = 4    # 車両の最高速度
+	L = 100  # レーンの長さ
+	n_0 = 3  # monitoring period
+	v_0 = 4  # 車両の最高速度
+	n_max = 1001  # シミュレーションするステップ数
 
-	density = np.zeros(shape=((us2s_OV.K_MAX+1) * M))
-	flow    = np.zeros(shape=((us2s_OV.K_MAX+1) * M))
+	density = np.zeros(shape=((L+1) * M))
+	flow    = np.zeros(shape=((L+1) * M))
  
 	# 密度を変えて、複数の初期条件からflowを計算
 	id = 0  # 各シミュレーションに割り振る番号
-	for K in range(0, us2s_OV.K_MAX + 1):
+	for K in range(0, L + 1):
 		for _ in range(M):
 			sys.stdout.write("\rK = {:3d}, ({:4d}/{:4d})".format(K, _+1, M))
 			sys.stdout.flush()
 			# 車両の初期位置をランダムに生成
-			x_init = sorted(random.sample([i for i in range(us2s_OV.L)], K))
-			model = us2s_OV.us2s_OV(K, n_0, x_0, v_0, x_init)
+			x_init = sorted(random.sample([i for i in range(L)], K))
+			model = us2s_OV_CA.us2s_OV_CA(L, K, n_0, v_0, x_init, n_max)
 			model.simulate()
 			density[id] = model.density()
 			flow[id] = model.flow(800, 1000)
