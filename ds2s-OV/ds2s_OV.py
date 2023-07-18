@@ -45,7 +45,7 @@ class ds2s_OV:
         # 車両の初期位置
         x_init = np.sort(x_init)
         if self.K == 0: return  # 車両が0台のとき
-        self.x[:n_0+1, :self.K] = x_init[None, :]
+        self.x[:n_0+1] = x_init[None, :]
         self.delta_x = np.full(
             shape=(self.n_max + 1, self.K),
             fill_value=-1,
@@ -78,7 +78,7 @@ class ds2s_OV:
     # ステップを一つ進める
     def _next(self) -> None:
         # 各車両における\delta_eff x_kをを計算する
-        delta_eff = self.delta_x[self.n-self.n_0:self.n+1, :self.K] - self.x_0
+        delta_eff = self.delta_x[self.n-self.n_0:self.n+1] - self.x_0
         e1 = np.sum(
             np.exp(
                 -delta_eff / self.dx
@@ -94,8 +94,8 @@ class ds2s_OV:
         )
         e2 /= self.n_0 + 1
 
-        self.x[self.n+1, :self.K] = \
-            self.x[self.n, :self.K] \
+        self.x[self.n+1] = \
+            self.x[self.n] \
             + self.dx * (
                 np.log(1.0 + 1.0 / e1) \
                 - np.log(1.0 + np.exp(-self.x_0 / self.dx)) \
