@@ -102,15 +102,15 @@ class ds2s_OV:
                 - np.log(1.0 + 1.0 / e2) \
                 + np.log(1.0 + np.exp(-(self.x_0 + self.v_0 * self.dt) / self.dx))
             )
-        self.x[self.n+1, :self.K] = \
+        self.x[self.n+1] = \
             np.where(
-                self.x[self.n+1, :self.K] < self.L,
-                self.x[self.n+1, :self.K],
-                self.x[self.n+1, :self.K] - self.L
+                self.x[self.n+1] < self.L,
+                self.x[self.n+1],
+                self.x[self.n+1] - self.L
             )
         
         # 車両の追い抜きに対応
-        self.x[self.n+1, :self.K] = np.sort(self.x[self.n+1, :self.K])
+        self.x[self.n+1]  = np.sort(self.x[self.n+1])
 
         # 車間距離の更新
         if self.K == 1:
