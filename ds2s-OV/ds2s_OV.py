@@ -56,9 +56,12 @@ class ds2s_OV:
         if self.K == 1:
             self.delta_x[:self.n_0+1, 0] = self.L
             return
-
         self.delta_x[:self.n_0+1,  self.K-1] = \
             self.x[:self.n_0+1, 0       ] - self.x[:self.n_0+1,  self.K-1]
+        self.delta_x[:self.n_0+1, :self.K-1] = \
+            self.x[:self.n_0+1, 1:self.K] - self.x[:self.n_0+1, :self.K-1]
+
+        # 周期境界条件の適用
         self.delta_x[:self.n_0+1,  self.K-1] = \
             np.where(
                 self.delta_x[:self.n_0+1,  self.K-1] >= 0.0,
@@ -66,8 +69,6 @@ class ds2s_OV:
                 self.delta_x[:self.n_0+1,  self.K-1] + self.L
             )
 
-        self.delta_x[:self.n_0+1, :self.K-1] = \
-            self.x[:self.n_0+1, 1:self.K] - self.x[:self.n_0+1, :self.K-1]
         self.delta_x[:self.n_0+1, :self.K-1] = \
             np.where(
                 self.delta_x[:self.n_0+1, :self.K-1] >= 0.0,
@@ -94,6 +95,7 @@ class ds2s_OV:
         )
         e2 /= self.n_0 + 1
 
+		# 車両の座標を計算
         self.x[self.n+1] = \
             self.x[self.n] \
             + self.dx * (
@@ -102,6 +104,8 @@ class ds2s_OV:
                 - np.log(1.0 + 1.0 / e2) \
                 + np.log(1.0 + np.exp(-(self.x_0 + self.v_0 * self.dt) / self.dx))
             )
+        
+        # 周期境界条件
         self.x[self.n+1] = \
             np.where(
                 self.x[self.n+1] < self.L,
@@ -109,15 +113,19 @@ class ds2s_OV:
                 self.x[self.n+1] - self.L
             )
         
-        # 車両の追い抜きに対応
-        self.x[self.n+1]  = np.sort(self.x[self.n+1])
-
         # 車間距離の更新
         if self.K == 1:
             self.delta_x[self.n+1, 0] = self.L
         else:
-            self.delta_x[self.n+1,  self.K-1] = \
-                self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1]
+            # 車間距離の計算
+            self.delta_x[self.n+1,  self.K-1] = self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1]
+            self.delta_x[self.n+1, :self.K-1] = self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1]
+
+            # 車間距離が負となった車両が二組以上あるとき
+            if np.count_nonzero(self.delta_x[self.n+1] < 0) > 1:
+                print("追い抜きが発生[n={}]".format(self.n+1))
+            
+            # 周期境界条件
             self.delta_x[self.n+1,  self.K-1] = \
                 np.where(
                     self.delta_x[self.n+1,  self.K-1] >= 0.0,
@@ -125,13 +133,13 @@ class ds2s_OV:
                     self.delta_x[self.n+1,  self.K-1] + self.L,
                 )
             self.delta_x[self.n+1, :self.K-1] = \
-                self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1]
-            self.delta_x[self.n+1, :self.K-1] = \
                 np.where(
                     self.delta_x[self.n+1, :self.K-1] >= 0.0,
                     self.delta_x[self.n+1, :self.K-1],
                     self.delta_x[self.n+1, :self.K-1] + self.L,
                 )
+
+        
         self.n += 1
     
     # nmaxまでシミュレーションを行う
