@@ -13,30 +13,32 @@ dt    : 時間間隔
 x_init: 車両の初期位置
 n_max : シミュレーションするステップ数
 """
+
+
 class ds2s_OV:
     def __init__(
         self,
-        L     : np.float64,  # レーンの長さ
-        K     : np.int32,  # 車両の台数
-        n_0   : np.int32,  # monitoring period
-        x_0   : np.int32,  # 車間距離
-        v_0   : np.float64,  # 車両の最高速度
-        dt    : np.float64,  # 時間差分
-        dx    : np.float64,  # 空間差分
+        L: np.float64,  # レーンの長さ
+        K: np.int32,  # 車両の台数
+        n_0: np.int32,  # monitoring period
+        x_0: np.int32,  # 車間距離
+        v_0: np.float64,  # 車両の最高速度
+        dt: np.float64,  # 時間差分
+        dx: np.float64,  # 空間差分
         x_init: np.ndarray[np.float64],  # 車両の初期位置
-        n_max : np.int32
+        n_max: np.int32
     ) -> None:
-        self.L     = L  # レーンの長さ
-        self.K     = K  # 車両の数
-        self.n_0   = n_0  # monitoring period
-        self.x_0   = x_0  # 最短車間距離
-        self.v_0   = v_0  # 車両の最高速度
-        self.dt    = dt  # 時間間隔
-        self.dx    = dx  # 空間差分
+        self.L = L  # レーンの長さ
+        self.K = K  # 車両の数
+        self.n_0 = n_0  # monitoring period
+        self.x_0 = x_0  # 最短車間距離
+        self.v_0 = v_0  # 車両の最高速度
+        self.dt = dt  # 時間間隔
+        self.dx = dx  # 空間差分
         self.n_max = n_max  # シミュレーションするステップ数
-        self.n     = n_0  # 現在のステップ数
+        self.n = n_0  # 現在のステップ数
         # 各時刻における車両の位置 x[n][k] := x_k^n
-        self.x     = np.full(
+        self.x = np.full(
             shape=(self.n_max + 1, self.K),
             fill_value=-1,
             dtype=np.float64
@@ -44,7 +46,8 @@ class ds2s_OV:
 
         # 車両の初期位置
         x_init = np.sort(x_init)
-        if self.K == 0: return  # 車両が0台のとき
+        if self.K == 0:
+            return  # 車両が0台のとき
         self.x[:n_0+1] = x_init[None, :]
         self.delta_x = np.full(
             shape=(self.n_max + 1, self.K),
@@ -57,7 +60,7 @@ class ds2s_OV:
             self.delta_x[:self.n_0+1, 0] = self.L
             return
         self.delta_x[:self.n_0+1,  self.K-1] = \
-            self.x[:self.n_0+1, 0       ] - self.x[:self.n_0+1,  self.K-1]
+            self.x[:self.n_0+1, 0] - self.x[:self.n_0+1,  self.K-1]
         self.delta_x[:self.n_0+1, :self.K-1] = \
             self.x[:self.n_0+1, 1:self.K] - self.x[:self.n_0+1, :self.K-1]
 
@@ -67,15 +70,15 @@ class ds2s_OV:
                 self.delta_x[:self.n_0+1,  self.K-1] >= 0.0,
                 self.delta_x[:self.n_0+1,  self.K-1],
                 self.delta_x[:self.n_0+1,  self.K-1] + self.L
-            )
+        )
 
         self.delta_x[:self.n_0+1, :self.K-1] = \
             np.where(
                 self.delta_x[:self.n_0+1, :self.K-1] >= 0.0,
                 self.delta_x[:self.n_0+1, :self.K-1],
                 self.delta_x[:self.n_0+1, :self.K-1] + self.L,
-            )
-    
+        )
+
     # ステップを一つ進める
     def _next(self) -> None:
         # 各車両における\delta_eff x_kをを計算する
@@ -83,78 +86,83 @@ class ds2s_OV:
         e1 = np.sum(
             np.exp(
                 -delta_eff / self.dx
-            ),
+            ) / (self.n_0 + 1),
             axis=0
         )
-        e1 /= self.n_0 + 1
+        # e1 /= self.n_0 + 1
         e2 = np.sum(
             np.exp(
                 -(delta_eff - self.v_0 * self.dt) / self.dx
-            ),
+            ) / (self.n_0 + 1),
             axis=0
         )
-        e2 /= self.n_0 + 1
+        # e2 /= self.n_0 + 1
 
-		# 車両の座標を計算
+        # 車両の座標を計算
         self.x[self.n+1] = \
             self.x[self.n] \
             + self.dx * (
-                np.log(1.0 + 1.0 / e1) \
-                - np.log(1.0 + np.exp(-self.x_0 / self.dx)) \
-                - np.log(1.0 + 1.0 / e2) \
+                np.log(1.0 + 1.0 / e1)
+                - np.log(1.0 + np.exp(-self.x_0 / self.dx))
+                - np.log(1.0 + 1.0 / e2)
                 + np.log(1.0 + np.exp(-(self.x_0 + self.v_0 * self.dt) / self.dx))
-            )
-        
+        )
+
+        # ソート
+        self.x[self.n+1] = np.sort(self.x[self.n+1])
+
+        # 車間距離の更新
+        if self.K == 1:
+            self.delta_x[self.n+1, 0] = self.L
+        else:
+            # 車間距離の計算
+            self.delta_x[self.n+1,  self.K-1] = self.x[self.n +
+                                                       1, 0] - self.x[self.n+1,  self.K-1] + self.L
+            self.delta_x[self.n+1, :self.K-1] = self.x[self.n +
+                                                       1, 1:self.K] - self.x[self.n+1, :self.K-1]
+
+            # # 車間距離が負となった車両が二組以上あるとき
+            # if np.count_nonzero(self.delta_x[self.n+1] < 0) > 1:
+            #     print("追い抜きが発生[n={}]".format(self.n+1))
+
+            # # 周期境界条件
+            # self.delta_x[self.n+1,  self.K-1] = \
+            #     np.where(
+            #         self.delta_x[self.n+1,  self.K-1] >= 0.0,
+            #         self.delta_x[self.n+1,  self.K-1],
+            #         self.delta_x[self.n+1,  self.K-1] + self.L,
+            # )
+            # self.delta_x[self.n+1, :self.K-1] = \
+            #     np.where(
+            #         self.delta_x[self.n+1, :self.K-1] >= 0.0,
+            #         self.delta_x[self.n+1, :self.K-1],
+            #         self.delta_x[self.n+1, :self.K-1] + self.L,
+            # )
+
         # 周期境界条件
         self.x[self.n+1] = \
             np.where(
                 self.x[self.n+1] < self.L,
                 self.x[self.n+1],
                 self.x[self.n+1] - self.L
-            )
-        
-        # 車間距離の更新
-        if self.K == 1:
-            self.delta_x[self.n+1, 0] = self.L
-        else:
-            # 車間距離の計算
-            self.delta_x[self.n+1,  self.K-1] = self.x[self.n+1, 0       ] - self.x[self.n+1,  self.K-1]
-            self.delta_x[self.n+1, :self.K-1] = self.x[self.n+1, 1:self.K] - self.x[self.n+1, :self.K-1]
+        )
 
-            # 車間距離が負となった車両が二組以上あるとき
-            if np.count_nonzero(self.delta_x[self.n+1] < 0) > 1:
-                print("追い抜きが発生[n={}]".format(self.n+1))
-            
-            # 周期境界条件
-            self.delta_x[self.n+1,  self.K-1] = \
-                np.where(
-                    self.delta_x[self.n+1,  self.K-1] >= 0.0,
-                    self.delta_x[self.n+1,  self.K-1],
-                    self.delta_x[self.n+1,  self.K-1] + self.L,
-                )
-            self.delta_x[self.n+1, :self.K-1] = \
-                np.where(
-                    self.delta_x[self.n+1, :self.K-1] >= 0.0,
-                    self.delta_x[self.n+1, :self.K-1],
-                    self.delta_x[self.n+1, :self.K-1] + self.L,
-                )
-
-        
         self.n += 1
-    
+
     # nmaxまでシミュレーションを行う
     def simulate(self) -> None:
-        if self.K == 0: return
+        if self.K == 0:
+            return
         while self.n < self.n_max:
             self._next()
-    
+
     # n_1ステップからn_2ステップまでの流量を計算
     def flow(self, n_1: int, n_2: int) -> float:
-        if self.K == 0: return 0.0
-        return np.sum(
-            self.delta_x[n_1:n_2+1, :self.K] \
-                / (self.dt * (n_2 - n_1 + 1) * self.L)
-        )
+        if self.K == 0:
+            return 0.0
+        v = self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K]
+        v = np.where(v > 0, v, v + self.L)
+        return np.sum(v / (self.dt * (n_2 - n_1 + 1) * self.L))
 
     def density(self):
         return np.float64(self.K) / self.L
