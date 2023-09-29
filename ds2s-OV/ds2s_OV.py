@@ -2,6 +2,8 @@ import random
 from typing import List
 import numpy as np
 
+EPS = 1e-10
+
 """
 ds2s_OVモデルを表現するクラス
 L     : レーンの長さ
@@ -59,6 +61,7 @@ class ds2s_OV:
         for i in range(n_0+1):
             self._update_delta_x(i)
 
+    # self.xをもとにself.delta_xを更新する
     def _update_delta_x(self, n) -> None:
         if self.K == 1:
             self.delta_x[n, 0] = self.L
@@ -72,9 +75,8 @@ class ds2s_OV:
             self.delta_x[n] + self.L
         )
 
-    # ステップを一つ進める
-    def _next(self) -> None:
-        # 各車両における\delta_eff x_kをを計算する
+    # 移動距離の計算
+    def _delta(self) -> np.ndarray[np.float64]:
         delta_eff = self.delta_x[self.n-self.n_0:self.n+1] - self.x_0
         e1 = np.sum(
             np.exp(
@@ -82,25 +84,21 @@ class ds2s_OV:
             ) / (self.n_0 + 1),
             axis=0
         )
-        # e1 /= self.n_0 + 1
         e2 = np.sum(
             np.exp(
                 -(delta_eff - self.v_0 * self.dt) / self.dx
             ) / (self.n_0 + 1),
             axis=0
         )
-        # e2 /= self.n_0 + 1
-
-        # 車両の座標を計算
-        self.x[self.n+1] = \
-            self.x[self.n] \
-            + self.dx * (
-                np.log(1.0 + 1.0 / e1)
-                - np.log(1.0 + np.exp(-self.x_0 / self.dx))
-                - np.log(1.0 + 1.0 / e2)
-                + np.log(1.0 + np.exp(-(self.x_0 + self.v_0 * self.dt) / self.dx))
+        return self.dx * (
+            np.log(1.0 + 1.0 / e1)
+            - np.log(1.0 + np.exp(-self.x_0 / self.dx))
+            - np.log(1.0 + 1.0 / e2)
+            + np.log(1.0 + np.exp(-(self.x_0 + self.v_0 * self.dt) / self.dx))
         )
-        # 周期境界条件
+
+        # 周期境界条件の適用
+    def _periodic(self) -> None:
         self.x[self.n+1] = \
             np.where(
                 self.x[self.n+1] < self.L,
@@ -108,12 +106,11 @@ class ds2s_OV:
                 self.x[self.n+1] - self.L
         )
 
-        # ソート
-        # self.x[self.n+1] = np.sort(self.x[self.n+1])
-
-        # 車間距離の更新
+    # ステップを一つ進める
+    def _next(self) -> None:
+        self.x[self.n+1] = self.x[self.n] + self._delta()
+        self._periodic()
         self._update_delta_x(self.n+1)
-
         self.n += 1
 
     # nmaxまでシミュレーションを行う
@@ -128,9 +125,10 @@ class ds2s_OV:
         if self.K == 0:
             return 0.0
         v = self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K]
-        v = np.where(v >= 0.0, v, v + self.L)
+        v = np.where(v >= -EPS, v, v + self.L)
         return np.sum(v / (self.dt * (n_2 - n_1 + 1) * self.L))
 
+    # 密度
     def density(self):
         return np.float64(self.K) / self.L
 
