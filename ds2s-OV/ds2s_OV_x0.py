@@ -1,5 +1,6 @@
 # Path: ds2s-OV/ds2s_OV_x1.py
 import ds2s_OV
+import numpy as np
 
 
 class ds2s_OV_x0(ds2s_OV.ds2s_OV):
