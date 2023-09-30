@@ -1,4 +1,4 @@
-# Path: ds2s-OV/ds2s_OV_x1.py
+# Path: ds2s-OV/ds2s_OV.py
 import ds2s_OV
 import numpy as np
 

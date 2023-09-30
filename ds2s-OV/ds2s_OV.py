@@ -1,7 +1,6 @@
 import random
 from typing import List
 import numpy as np
-import matplotlib.pyplot as plt
 
 EPS = 1e-10
 
