@@ -87,9 +87,12 @@ class us2s_OV_CA:
     # n_1ステップからn_2ステップまでの流量を計算
     def flow(self, n_1: int, n_2: int) -> float:
         if self.K == 0: return 0.0
-        tmp = np.sum((self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K] + self.L) % self.L)
-        tmp /= self.dt
-        tmp /= (n_2 - n_1 + 1) * self.L
+        tmp = np.sum(
+            ((self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K] + self.L) % self.L)
+                / (self.dt * (n_2 - n_1 + 1) * self.L)
+        )
+        # tmp /= self.dt
+        # tmp /= (n_2 - n_1 + 1) * self.L
         return tmp
 
     def density(self):
