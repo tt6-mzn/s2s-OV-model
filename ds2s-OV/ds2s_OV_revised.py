@@ -122,12 +122,13 @@ class ds2s_OV_revised:
             return
         while self.n < self.n_max:
             self._next()
-        self.x = \
-            np.where(
-                self.x < self.L,
-                self.x,
-                self.x - self.L
-            )
+        while np.any(self.x >= self.L):
+            self.x = \
+                np.where(
+                    self.x < self.L,
+                    self.x,
+                    self.x - self.L
+                )
 
     # n_1ステップからn_2ステップまでの流量を計算
     def flow(self, n_1: int, n_2: int) -> float:
