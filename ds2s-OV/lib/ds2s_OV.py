@@ -1,7 +1,6 @@
 import random
 from typing import List
 import numpy as np
-from functools import singledispatch
 import json
 
 EPS = 1e-10
@@ -20,7 +19,6 @@ n_max : シミュレーションするステップ数
 
 
 class ds2s_OV:
-    @singledispatch
     def __init__(
         self,
         L: np.float64,  # レーンの長さ
@@ -64,9 +62,9 @@ class ds2s_OV:
         for i in range(n_0+1):
             self._update_delta_x(i)
     
-    @__init__.register
-    def _(self, json: dict, n_max: int = 1000):
-        self.__init__(
+    @classmethod
+    def from_json(cls, json: dict, n_max: int):
+        return cls(
             L=json["L"],
             K=json["K"],
             n_0=json["n_0"],
@@ -147,7 +145,7 @@ class ds2s_OV:
 
     # 密度
     def density(self):
-        return np.float64(self.K) / self.L
+        return self.x_0 * np.float64(self.K) / self.L
 
     # jsonとして出力
     def get_json(self):
@@ -160,6 +158,7 @@ class ds2s_OV:
             "dt": self.dt,
             "dx": self.dx,
             "x_init": self.x[0].tolist(),
+            "density": self.density(),
         }
 
 
