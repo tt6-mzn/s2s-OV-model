@@ -151,7 +151,7 @@ class ds2s_OV:
 
     # jsonとして出力
     def get_json(self):
-        return json.dumps({
+        return {
             "L": self.L,
             "K": self.K,
             "n_0": self.n_0,
@@ -160,7 +160,7 @@ class ds2s_OV:
             "dt": self.dt,
             "dx": self.dx,
             "x_init": self.x[0].tolist(),
-        })
+        }
 
 
 if __name__ == "__main__":
