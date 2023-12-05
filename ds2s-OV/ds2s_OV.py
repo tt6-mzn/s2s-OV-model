@@ -1,6 +1,8 @@
 import random
 from typing import List
 import numpy as np
+from functools import singledispatch
+import json
 
 EPS = 1e-10
 
@@ -18,6 +20,7 @@ n_max : シミュレーションするステップ数
 
 
 class ds2s_OV:
+    @singledispatch
     def __init__(
         self,
         L: np.float64,  # レーンの長さ
@@ -60,6 +63,20 @@ class ds2s_OV:
         # 前方の車両との車間距離
         for i in range(n_0+1):
             self._update_delta_x(i)
+    
+    @__init__.register
+    def _(self, json: dict, n_max: int = 1000):
+        self.__init__(
+            L=json["L"],
+            K=json["K"],
+            n_0=json["n_0"],
+            x_0=json["x_0"],
+            v_0=json["v_0"],
+            dt=json["dt"],
+            dx=json["dx"],
+            x_init=np.array(json["x_init"]),
+            n_max=n_max
+        )
 
     # self.xをもとにself.delta_xを更新する
     def _update_delta_x(self, n) -> None:
@@ -131,6 +148,19 @@ class ds2s_OV:
     # 密度
     def density(self):
         return np.float64(self.K) / self.L
+
+    # jsonとして出力
+    def get_json(self):
+        return json.dumps({
+            "L": self.L,
+            "K": self.K,
+            "n_0": self.n_0,
+            "x_0": self.x_0,
+            "v_0": self.v_0,
+            "dt": self.dt,
+            "dx": self.dx,
+            "x_init": self.x[0].tolist(),
+        })
 
 
 if __name__ == "__main__":
