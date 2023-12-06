@@ -40,3 +40,22 @@ def plot_fundamental(density, flow):
 	plt.ylim((0, 1.0))
 	plt.scatter(density, flow, s=3)
 	plt.show()
+
+
+# 自明解の流量
+def flow_stable(
+		density: np.float64,
+		x_0: np.float64,
+		v_0: np.float64,
+		dt: np.float64,
+		dx: np.float64):
+	if density == 0.0:
+		return 0.0
+	left = dx * (
+		np.log(1 + np.exp((1.0/density - x_0)/dx))
+		- np.log(1 + np.exp(-x_0/dx))
+		- np.log(1 + np.exp((1.0/density - x_0 - v_0*dt)/dx))
+		+ np.log(1 + np.exp(-(x_0 + v_0*dt)/dx))
+	)
+	right = 1.0/density - x_0
+	return density * min(left, right)
