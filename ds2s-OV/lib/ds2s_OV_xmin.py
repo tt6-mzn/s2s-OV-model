@@ -12,12 +12,22 @@ class ds2s_OV_xmin(ds2s_OV.ds2s_OV):
         v_0: np.float64,  # 車両の最高速度
         dt: np.float64,  # 時間差分
         dx: np.float64,  # 空間差分
-		xmin: np.float64,  # 最短車間距離
+		x_min: np.float64,  # 最短車間距離
         x_init: np.ndarray[np.float64],  # 車両の初期位置
         n_max: np.int32
     ) -> None:
-        super().__init__(L, K, n_0, x_0, v_0, dt, dx, x_init, n_max)
-        self.xmin = xmin
+        super().__init__(
+            L=L,
+            K=K,
+            n_0=n_0,
+            x_0=x_0,
+            v_0=v_0,
+            dt=dt,
+            dx=dx,
+            x_init=x_init,
+            n_max=n_max
+        )
+        self.x_min = x_min
 	
     @classmethod
     def from_json(cls, json: dict, n_max: int):
@@ -29,7 +39,7 @@ class ds2s_OV_xmin(ds2s_OV.ds2s_OV):
             v_0=json["v_0"],
             dt=json["dt"],
             dx=json["dx"],
-            xmin=json["xmin"],
+            x_min=json["x_min"],
             x_init=np.array(json["x_init"]),
             n_max=n_max
         )
@@ -37,16 +47,16 @@ class ds2s_OV_xmin(ds2s_OV.ds2s_OV):
 
     def _next(self) -> None:
         self.x[self.n+1] = self.x[self.n] + np.where(
-            self._delta() <= self.delta_x[self.n] - self.xmin,
+            self._delta() <= self.delta_x[self.n] - self.x_min,
             self._delta(),
-            self.delta_x[self.n] - self.xmin
+            self.delta_x[self.n] - self.x_min
         )
         self._periodic()
         self._update_delta_x(self.n+1)
         self.n += 1
     
     def density(self):
-        return self.xmin * self.K / self.L
+        return self.K / self.L
 
     def get_json(self):
-        return super().get_json() | {"xmin": self.xmin}
+        return super().get_json() | {"x_min": self.x_min}
