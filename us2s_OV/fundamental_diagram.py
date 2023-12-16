@@ -1,7 +1,7 @@
 import sys
 import matplotlib.pyplot as plt
 import random
-import us2s_OV_CA
+import us2s_OV.lib.us2s_OV_CA as us2s_OV_CA
 import numpy as np
 
 random.seed(0)
