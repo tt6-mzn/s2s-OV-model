@@ -48,7 +48,9 @@ def flow_stable(
 		x_0: np.float64,
 		v_0: np.float64,
 		dt: np.float64,
-		dx: np.float64):
+		dx: np.float64,
+		xmin: np.float64,
+	):
 	if density == 0.0:
 		return 0.0
 	left = dx * (
@@ -57,5 +59,5 @@ def flow_stable(
 		- np.log(1 + np.exp((1.0/density - x_0 - v_0*dt)/dx))
 		+ np.log(1 + np.exp(-(x_0 + v_0*dt)/dx))
 	)
-	right = 1.0/density - x_0
+	right = 1.0/density - xmin
 	return density * min(left, right)
