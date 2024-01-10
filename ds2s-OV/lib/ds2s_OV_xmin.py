@@ -46,11 +46,17 @@ class ds2s_OV_xmin(ds2s_OV.ds2s_OV):
 
 
     def _next(self) -> None:
-        self.x[self.n+1] = self.x[self.n] + np.where(
+        self.v[self.n+1] = np.where(
             self._delta() <= self.delta_x[self.n] - self.x_min,
-            self._delta(),
-            self.delta_x[self.n] - self.x_min
+            self._delta() / self.dt,
+            (self.delta_x[self.n] - self.x_min) / self.dt
         )
+        self.x[self.n+1] = self.x[self.n] + self.v[self.n+1] * self.dt
+        # self.x[self.n+1] = self.x[self.n] + np.where(
+        #     self._delta() <= self.delta_x[self.n] - self.x_min,
+        #     self._delta(),
+        #     self.delta_x[self.n] - self.x_min
+        # )
         self._periodic()
         self._update_delta_x(self.n+1)
         self.n += 1

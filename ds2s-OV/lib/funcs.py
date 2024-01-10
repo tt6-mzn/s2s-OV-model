@@ -19,6 +19,19 @@ def plot_pattern(model, ni, nf, colored=0):
     plt.scatter(x, y, s=1, c="red")
     plt.show()
 
+def plot_pattern_sort(model, ni, nf):
+    x = np.array([[j for i in range(model.K)] for j in range(ni, nf+1)]) \
+        .flatten()
+    y = model.x[ni:nf+1, :model.K].flatten()
+    plt.figure(figsize=(10, 10))
+    plt.title(
+        "L={}, K={}, n0={}, x0={}, v0={}, dt={}, dx={}"
+            .format(model.L, model.K, model.n_0, model.x_0, model.v_0, model.dt, model.dx)
+    )
+    plt.xlabel("Time")
+    plt.ylabel("Location of Vehicles")
+    plt.scatter(x, y, s=1)
+    plt.show()
 
 def plot_flow(model, ni, nf):
 	x = np.array([i for i in range(nf - ni + 1)])

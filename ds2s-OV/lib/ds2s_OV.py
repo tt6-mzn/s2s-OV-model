@@ -51,12 +51,18 @@ class ds2s_OV:
             fill_value=-1,
             dtype=np.float64
         )  # 前方のｓ車両との車間距離 delta_x[n][k] := x_{k+1}^n - x_k^n
+        self.v = np.full(
+            shape=(self.n_max + 1, self.K),
+            fill_value=-1,
+            dtype=np.float64
+        )  # 各時刻における車両の速度 v[n][k] := v_k^n
 
         # 車両の初期位置
         x_init = np.sort(x_init)  # 一応ソートしておく
         if self.K == 0:
             return  # 車両が0台のとき
         self.x[:n_0+1] = x_init[None, :]
+        self.v[:n_0+1] = np.zeros(shape=(n_0+1, self.K))
 
         # 前方の車両との車間距離
         for i in range(n_0+1):
@@ -81,14 +87,18 @@ class ds2s_OV:
         if self.K == 1:
             self.delta_x[n, 0] = self.L
             return
+        # 先頭にいる車両のインデックスを取得
+        head = np.argmax(self.x[n])
         self.delta_x[n, self.K-1] = self.x[n, 0] - self.x[n, self.K-1]
         self.delta_x[n, :self.K-1] = self.x[n, 1:self.K] - self.x[n, :self.K-1]
-        # 周期境界条件の適用
-        self.delta_x[n] = np.where(
-            self.delta_x[n] >= 0.0,
-            self.delta_x[n],
-            self.delta_x[n] + self.L
-        )
+        # 先頭の車両に対して周期境界条件を適用
+        self.delta_x[n, head] += self.L
+        # # 周期境界条件の適用
+        # self.delta_x[n] = np.where(
+        #     self.delta_x[n] >= 0.0,
+        #     self.delta_x[n],
+        #     self.delta_x[n] + self.L
+        # )
 
     # 移動距離の計算
     def _delta(self) -> np.ndarray[np.float64]:
@@ -123,7 +133,8 @@ class ds2s_OV:
 
     # ステップを一つ進める
     def _next(self) -> None:
-        self.x[self.n+1] = self.x[self.n] + self._delta()
+        self.v[self.n+1] = self._delta() / self.dt
+        self.x[self.n+1] = self.x[self.n] + self.v[self.n+1] * self.dt
         self._periodic()
         self._update_delta_x(self.n+1)
         self.n += 1
@@ -139,9 +150,12 @@ class ds2s_OV:
     def flow(self, n_1: int, n_2: int) -> float:
         if self.K == 0:
             return 0.0
-        v = self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K]
-        v = np.where(v >= -EPS, v, v + self.L)
-        return np.sum(v / (self.dt * (n_2 - n_1 + 1) * self.L))
+        return np.sum(
+            self.v[n_1:n_2+1] / ((n_2 - n_1 + 1) * self.L)
+        )
+        # v = self.x[n_1+1:n_2+2, :self.K] - self.x[n_1:n_2+1, :self.K]
+        # v = np.where(v >= -EPS, v, v + self.L)
+        # return np.sum(v / (self.dt * (n_2 - n_1 + 1) * self.L))
 
     # 密度
     def density(self):
