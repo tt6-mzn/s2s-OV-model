@@ -216,8 +216,8 @@ def plot_fundamental(ax, model, density, flow):
     # ax.set_ylim((0, 1.0))
     ax.grid()
     ax.set_title(
-        "n0={}, v0={}"
-        .format(model.n_0, model.v_0)
+        "model={}, n0={}, v0={}"
+        .format(model.model_type(), model.n_0, model.v_0)
     )
     ax.scatter(density, flow, s=5)
 
