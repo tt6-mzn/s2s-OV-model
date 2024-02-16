@@ -164,29 +164,49 @@ class ds2s_OV:
             "x_init": self.x[0].tolist(),
             "density": self.density(),
         }
+    
+    # モデル名
+    def model_type(self):
+        return "ds2s_OV"
 
 
-def plot_pattern(model, ni, nf):
+def plot_pattern(model, ni, nf, ax=None):
     # niからnfまでの車両の位置をプロット
     x = np.array([[j for i in range(1, model.K)] for j in range(ni, nf+1)]) \
         .flatten()
     y = model.x[ni:nf+1, 1:model.K].flatten()
-    plt.figure(figsize=(10, 10))
-    plt.title(
-        "L={}, K={}, n0={}, x0={:.2}, v0={:.2}, dt={:.2}, dx={:.2}"
-            .format(model.L, model.K, model.n_0, model.x_0, model.v_0, model.dt, model.dx)
-    )
-    plt.xlabel("Time")
-    plt.ylabel("Location of Vehicles")
-    plt.grid()
-    plt.xlim((ni-1, nf+1))
-    plt.ylim((-model.x_0, model.L+model.x_0))
-    plt.scatter(x, y, s=3)
+    if ax == None:
+        plt.figure(figsize=(10, 10))
+        plt.title(
+            "L={}, K={}, n0={}, x0={:.2}, v0={:.2}, dt={:.2}, dx={:.2}"
+                .format(model.L, model.K, model.n_0, model.x_0, model.v_0, model.dt, model.dx)
+        )
+        plt.xlabel("Time")
+        plt.ylabel("Location of Vehicles")
+        plt.grid()
+        plt.xlim((ni-1, nf+1))
+        plt.ylim((-model.x_0, model.L+model.x_0))
+        plt.scatter(x, y, s=3)
+    else:
+        ax.set_title(
+            "model={}, L={}, K={}, n0={}, x0={:.2}, v0={:.2}, dt={:.2}, dx={:.2}"
+                .format(model.model_type(), model.L, model.K, model.n_0, model.x_0, model.v_0, model.dt, model.dx)
+        )
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Location of Vehicles")
+        ax.grid()
+        ax.set_xlim((ni-1, nf+1))
+        ax.set_ylim((-model.x_0, model.L+model.x_0))
+        ax.scatter(x, y, s=3)
+    
     # 一台目の車両の位置をプロット
     x = np.array([j for j in range(ni, nf+1)])
     y = model.x[ni:nf+1, 0]
-    plt.scatter(x, y, s=3, c="red")
-    plt.show()
+    if ax == None:
+        plt.scatter(x, y, s=3, c="red")
+        plt.show()
+    else:
+        ax.scatter(x, y, s=3, c="red")
 
 
 def plot_fundamental(ax, model, density, flow):
