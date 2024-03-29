@@ -1,7 +1,4 @@
-import random
-from typing import List
 import numpy as np
-import json
 import matplotlib.pyplot as plt
 
 """
@@ -139,17 +136,17 @@ class ds2s_OV:
         while self.n < self.n_max:
             self._next()
 
-    # niステップからnfステップまでの流量を計算
-    def flow(self, ni: int, nf: int) -> float:
+    # n1ステップからn2ステップまでの流量を計算
+    def flow(self, n1: int, n2: int) -> float:
         if self.K == 0:
             return 0.0
         return np.sum(
-            self.v[ni:nf+1] / ((nf - ni + 1) * self.L)
+            self.v[n1:n2+1] / ((n2 - n1 + 1) * self.L)
         )
 
     # 密度
     def density(self):
-        return np.float64(self.K) / self.L
+        return self.x_0 * np.float64(self.K) / self.L
 
     # jsonとして出力
     def get_json(self):
@@ -219,7 +216,7 @@ def plot_fundamental(ax, model, density, flow):
         "model={}, n0={}, v0={}"
         .format(model.model_type(), model.n_0, model.v_0)
     )
-    ax.scatter(density, flow, s=5)
+    ax.scatter(density, flow, s=5, color="red")
 
 
 if __name__ == "__main__":
